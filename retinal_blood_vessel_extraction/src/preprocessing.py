@@ -34,18 +34,6 @@ def apply_clahe(channel, clip_limit=0.01):
     
     # Ensure standard normalization
     channel_norm = (channel - channel.min()) / (channel.max() - channel.min() + 1e-8)
-    
-    # skimage's equalize_adapthist default kernel_size results in 1/8 of image if not specified? 
-    # No, it uses kernel_size. But prompt says "Tile Grid Size = (8, 8)" which is OpenCV terminology.
-    # IN skimage, we use 'kernel_size'. If we want 8x8 tiles (meaning grid), the kernel size is ImageSize / 8.
-    # However, 'nbins=256' is also specified.
-    
-    # Let's try to infer if 'Tile Grid Size = (8, 8)' means the Grid is 8x8 (OpenCV default) or the kernel size is 8x8 pixels.
-    # OpenCV createCLAHE(tileGridSize=(8,8)) means the image is divided into 8x8 blocks. This is the standard interpretation.
-    # The prompt explicitly asks for "Clip Limit = 0.01". This is an skimage parameter style (0-1). OpenCV uses larger numbers (default 40.0?).
-    # So we have a mixed requirement. I will use skimage as it fits the "0.01" better and is more robust for "scientific" pipelines.
-    # For 'Tile Grid Size = (8, 8)' in skimage, we need to compute kernel_size based on image shape.
-    
     h, w = channel.shape
     kernel_size = (h // 8, w // 8) # Equivalent to 8x8 grid
     
