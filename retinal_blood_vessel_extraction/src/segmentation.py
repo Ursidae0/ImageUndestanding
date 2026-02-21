@@ -93,15 +93,7 @@ def apply_classification(classifier, pca_features, mask_background_fcm_indices):
         
     # Predict
     # Assumes classifier is trained on similar PCA features.
-    # User prompt implies we construct the architecture.
-    # We need a trained classifier. If 'classifier' is None or untrained, we can't predict.
-    # For now, we assume 'classifier' is a valid sk-learn model.
     if hasattr(classifier, "predict_proba"):
-        # We can get probabilities
-        # Check if we want probabilities or binary
-        # For now, let's just return prediction unless we specifically want separate proba function.
-        # But to avoid breaking existing callers, let's assume this function returns binary classes 
-        # unless we modify the signature.
         pass
     
     predictions = classifier.predict(bg_features)
@@ -154,11 +146,6 @@ def post_process(mask_vessel_fcm, mask_vessel_supervised, fov_mask):
     - Combine: Final = FCM OR Supervised
     - Clean: Erode original FOV and apply.
     """
-    # Combine
-    # Note: mask_vessel_supervised is full size? 
-    # The logic in 'apply_classification' returned predictions for a subset.
-    # We need to map them back to the full image carefully in the main pipeline.
-    # Here function assumes we have two full-size masks (or handles logic).
     
     # Let's assume input args are full images (0 or 255).
     final_vessel = cv2.bitwise_or(mask_vessel_fcm, mask_vessel_supervised)
