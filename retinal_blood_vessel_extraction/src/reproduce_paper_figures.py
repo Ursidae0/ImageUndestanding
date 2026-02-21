@@ -286,10 +286,6 @@ def run_reproduction(data_root="dataset/DRIVE/test", output_root="paper_figures_
         if len(probs_bg) > 0:
             prob_map[r[bg_idx], c[bg_idx]] = probs_bg
         
-        # Reconstruct full image probability map? 
-        # Actually `prob_map` is just for the FOV pixels (using indices).
-        # But `indices` maps to (rows, cols) of the full image.
-        # So mask construction above is correct.
         
         # Fig 11 - Combined
         save_figure_grid(
@@ -319,16 +315,6 @@ def run_reproduction(data_root="dataset/DRIVE/test", output_root="paper_figures_
         if gt_path and os.path.exists(gt_path):
             gt_img = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE)
             if gt_img is not None:
-                # Need to crop GT to match crop_img if necessary? 
-                # preprocees_image crops the input based on mask bbox.
-                # Currently we don't have the crop coordinates exposed easily from preprocess_image return...
-                # BUT, preprocess_image returns `crop_mask` which is the cropped mask.
-                # We need the SAME crop for GT.
-                # Actually, preprocess_image returns `debug_data` which might help, or we should modify preprocess logic.
-                # For now, let's assume we can get the crop coords or re-crop.
-                # Wait, `preprocess_image` implementation in `preprocessing.py` creates the bounding box.
-                # We should probably pass the full GT to `calculate_metrics` and let it handle... NO.
-                # We need to crop GT exactly as we cropped the image.
                 
                 # Re-calculate bbox from fov_mask
                 contours, _ = cv2.findContours(fov_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -343,20 +329,7 @@ def run_reproduction(data_root="dataset/DRIVE/test", output_root="paper_figures_
                         
                     met = evaluator.calculate_metrics(final, crop_gt, crop_mask)
                     
-                    # Calculate AUC
-                    # Need probability map of same shape as final/crop_gt
-                    # Current `prob_map` is full size (shape_2d). Need to crop/adjust?
-                    # `post_process` uses `mask_sup` which uses `shape_2d`.
-                    # So `prob_map` is 565x584 (example).
-                    # `final` comes from `post_process` which handles `fov_mask`.
-                    # `crop_img` comes from `preprocess_image` which crops to bbox.
-                    # Wait, `flatten_features` uses `crop_mask` (which is small).
-                    # So `shape_2d` returned by `flatten_features` is the CROPPED shape (h, w).
-                    # Let's verify: 
-                    # `features, deb_feat = extract_features(..., crop_mask, ...)` -> returns maps of size crop_mask.
-                    # `features_fov, indices, shape_2d = seg.flatten_features(features, crop_mask)` -> shape_2d is crop_mask.shape.
-                    # So `prob_map` isALREADY cropped size.
-                    
+                    # Calculate AUC         
                     auc = evaluator.calculate_auc(prob_map, crop_gt, crop_mask)
                     met['AUC'] = auc
                     
